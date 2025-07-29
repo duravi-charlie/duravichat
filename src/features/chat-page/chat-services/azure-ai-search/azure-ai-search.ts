@@ -19,7 +19,16 @@ const debug = process.env.DEBUG === "true";
 
 export interface AzureSearchDocumentIndex {
   id: string;
-  pageContent: string;
+  /**
+   * Original field name used by this project. Some indexes might
+   * instead store the content under `content`, so both are optional
+   * to keep backward compatibility.
+   */
+  pageContent?: string;
+  /**
+   * Alternative content field supported by some search indexes.
+   */
+  content?: string;
   embedding?: number[];
   user: string;
   chatThreadId: string;
@@ -219,7 +228,9 @@ export const IndexDocuments = async (
         id: uniqueId(),
         chatThreadId,
         user: await userHashedId(),
+        // Store content under both possible field names for compatibility
         pageContent: doc,
+        content: doc,
         metadata: fileName,
         embedding: [],
       };
@@ -337,7 +348,7 @@ export const EmbedDocuments = async (
   try {
     if (debug) console.log("Embedding documents:", documents.map((d) => d.id));
     const openai = OpenAIEmbeddingInstance();
-    const contentsToEmbed = documents.map((d) => d.pageContent);
+    const contentsToEmbed = documents.map((d) => d.pageContent ?? d.content ?? "");
 
     const embeddings = await openai.embeddings.create({
       input: contentsToEmbed,
@@ -436,6 +447,12 @@ const CreateSearchIndex = async (): Promise<
         },
         {
           name: "pageContent",
+          searchable: true,
+          type: "Edm.String",
+        },
+        {
+          // Alternate field name for page content to support older indexes
+          name: "content",
           searchable: true,
           type: "Edm.String",
         },

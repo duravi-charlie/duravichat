@@ -43,8 +43,9 @@ export const ChatApiRAG = async (props: {
 
   const content = documents
     .map((result, index) => {
-      const content = result.content.document.pageContent;
-      const context = `[${index}]. file name: ${result.content.document.metadata} \n file id: ${result.id} \n ${content}`;
+      const doc = result.content.document as any;
+      const text = doc.pageContent ?? doc.content;
+      const context = `[${index}]. file name: ${doc.metadata} \n file id: ${result.id} \n ${text}`;
       return context;
     })
     .join("\n------\n");
