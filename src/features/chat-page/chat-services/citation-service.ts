@@ -103,11 +103,13 @@ export const FindCitationByID = async (
 export const FormatCitations = (citation: DocumentSearchResponse[]) => {
   const withoutEmbedding: DocumentSearchResponse[] = [];
   citation.forEach((d) => {
+    const pageContent = d.document.pageContent ?? (d.document as any).content ?? "";
+
     withoutEmbedding.push({
       score: d.score,
       document: {
         metadata: d.document.metadata,
-        pageContent: d.document.pageContent,
+        pageContent,
         chatThreadId: d.document.chatThreadId,
         id: "",
         user: "",
